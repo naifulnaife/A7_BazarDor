@@ -40,7 +40,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white shadow-sm">
       
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-3 sm:px-6 lg:px-8">
+      <div className="mx-auto container flex  items-center justify-between gap-3 px-3 py-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-2">
           <span className="text-3xl sm:text-4xl">🛒</span>
 

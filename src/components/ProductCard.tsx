@@ -37,7 +37,7 @@ export default function ProductCard({ product,}: {
 
   return (
     <Link
-      href={`/product/${slug}`}
+      href={`/product/${product.id}`}
       className="group flex min-w-0 flex-col justify-between rounded-2xl border border-[#dfe7df] bg-[#fbfdfb] p-3.5 transition hover:border-emerald-300 hover:shadow-md sm:p-4" >
     
       <div className="flex items-start gap-3">

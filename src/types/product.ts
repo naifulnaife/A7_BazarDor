@@ -1,3 +1,4 @@
+
 export interface Product {
   id: number | string;
   slug?: string;
@@ -33,6 +34,14 @@ export interface Product {
     dir?: "up" | "down" | "same" | string;
     pct?: number;
   };
+
+  // Market-wise prices
+  markets?: {
+    market: string;
+    division?: string;
+    min: number;
+    max: number;
+  }[];
 
   description?: string;
 }

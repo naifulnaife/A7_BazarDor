@@ -297,7 +297,7 @@ export default function ProductDetailsPage() {
           </div>
         </section>
 
-        {/* বাজারভিত্তিক দাম */}
+       
         <section className="mt-3 rounded-xl border border-[#e1e9e1] bg-[#fbfdfb] p-3 sm:p-4">
           <h2 className="mb-3 text-xs font-bold sm:text-sm">
             বাজারভিত্তিক আজকের দাম

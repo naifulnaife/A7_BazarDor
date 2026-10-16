@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -22,14 +21,12 @@ type Category = {
 
 type Product = {
   id: number | string;
-  slug?: string;
-  nameBn: string;
+  nameBn?: string;
   category?: string;
   categoryIcon?: string;
   image?: string;
   unit?: string;
   today: number;
-  yesterday?: number;
   change?: {
     dir?: string;
     pct?: number;
@@ -47,22 +44,17 @@ function extractArray<T>(response: unknown): T[] {
 
   const obj = response as Record<string, unknown>;
 
-  // Supports API responses such as { data: [...] }
-  if (Array.isArray(obj.data)) {
-    return obj.data as T[];
-  }
+  for (const key of ["data", "categories", "products", "result"]) {
+    const value = obj[key];
 
-  if (Array.isArray(obj.categories)) {
-    return obj.categories as T[];
-  }
+    if (Array.isArray(value)) {
+      return value as T[];
+    }
 
-  if (Array.isArray(obj.products)) {
-    return obj.products as T[];
-  }
-
-  // Supports nested responses such as { data: { products: [...] } }
-  if (obj.data && typeof obj.data === "object") {
-    return extractArray<T>(obj.data);
+    if (value && typeof value === "object") {
+      const nested = extractArray<T>(value);
+      if (nested.length > 0) return nested;
+    }
   }
 
   return [];
@@ -107,17 +99,21 @@ export default function Navbar() {
   }).format(new Date());
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
 
     async function fetchNavbarData() {
       try {
         const [categoryResponse, productResponse] = await Promise.all([
-          fetch(`${API_BASE}/categories`),
-          fetch(`${API_BASE}/products`),
+          fetch(`${API_BASE}/categories`, {
+            signal: controller.signal,
+          }),
+          fetch(`${API_BASE}/products`, {
+            signal: controller.signal,
+          }),
         ]);
 
         if (!categoryResponse.ok || !productResponse.ok) {
-          throw new Error("Failed to fetch categories or products");
+          throw new Error("Could not fetch navbar data.");
         }
 
         const [categoryJson, productJson] = await Promise.all([
@@ -128,21 +124,27 @@ export default function Navbar() {
         const categoryData = extractArray<Category>(categoryJson);
         const productData = extractArray<Product>(productJson);
 
-        if (!cancelled) {
-          setCategories(categoryData);
-          setProducts(
-            productData.filter(
-              (product) =>
-                product.nameBn &&
-                typeof product.today === "number" &&
-                Number.isFinite(product.today)
-            )
-          );
-        }
+        setCategories(
+          categoryData.filter((category) => category.slug)
+        );
+
+        setProducts(
+          productData.filter(
+            (product) =>
+              product.nameBn &&
+              typeof product.today === "number" &&
+              Number.isFinite(product.today)
+          )
+        );
       } catch (error) {
-        console.error("Navbar API error:", error);
+        if (
+          error instanceof Error &&
+          error.name !== "AbortError"
+        ) {
+          console.error("Navbar API error:", error);
+        }
       } finally {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setLoading(false);
         }
       }
@@ -150,9 +152,7 @@ export default function Navbar() {
 
     fetchNavbarData();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, []);
 
   const categoryLinks = [
@@ -161,33 +161,31 @@ export default function Navbar() {
       emoji: "🛒",
       href: "/#সব-পণ্য",
     },
-    ...categories
-      .filter((category) => category.slug || category.id)
-      .map((category) => {
-        const slug = category.slug || String(category.id);
-
-        return {
-          name: category.nameBn || category.name || "ক্যাটাগরি",
-          emoji:
-            category.icon ||
-            category.emoji ||
-            category.categoryIcon ||
-            "🛍️",
-          href: `/category/${slug}`,
-        };
-      }),
+    ...categories.map((category) => ({
+      name: category.nameBn || category.name || "ক্যাটাগরি",
+      emoji:
+        category.icon ||
+        category.emoji ||
+        category.categoryIcon ||
+        "🛍️",
+      href: `/category/${category.slug}`,
+    })),
   ];
 
-  const isActive = (href: string) => {
+  function isActive(href: string) {
     if (href === "/#সব-পণ্য") {
       return pathname === "/";
     }
 
-    return pathname === href || pathname.startsWith(`${href}/`);
-  };
+    return (
+      pathname === href ||
+      pathname.startsWith(`${href}/`)
+    );
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white shadow-sm">
+      {/* Logo and account buttons */}
       <div className="container mx-auto flex items-center justify-between gap-3 px-3 py-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-2">
           <span className="text-3xl sm:text-4xl">🛒</span>
@@ -223,14 +221,14 @@ export default function Navbar() {
           type="button"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
-          onClick={() => setMenuOpen(!menuOpen)}
+          onClick={() => setMenuOpen((open) => !open)}
           className="rounded-lg p-2 text-emerald-800 hover:bg-emerald-50 sm:hidden"
         >
           {menuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-     
+      {/* Desktop category navigation */}
       <nav className="hidden border-t border-gray-100 md:block">
         <div className="mx-auto flex max-w-6xl items-center justify-center gap-2 overflow-x-auto px-4 sm:gap-5 lg:gap-8">
           {categoryLinks.map((category) => {
@@ -255,7 +253,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile category navigation */}
+      {/* Mobile category menu */}
       {menuOpen && (
         <nav className="border-t border-gray-100 bg-white p-3 md:hidden">
           <div className="grid grid-cols-2 gap-2">
@@ -280,7 +278,7 @@ export default function Navbar() {
             })}
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2 border-t border-gray-100 pt-3 sm:hidden">
+          <div className="mt-3 grid grid-cols-2 gap-2 border-t border-gray-100 pt-3">
             <Link
               href="/signin"
               onClick={() => setMenuOpen(false)}
@@ -314,10 +312,7 @@ function PriceTicker({
 }) {
   if (loading) {
     return (
-      <div
-        className="overflow-hidden border-t border-gray-100 bg-white py-2 text-center text-sm text-gray-500"
-        aria-label="পণ্যের দাম"
-      >
+      <div className="overflow-hidden border-t border-gray-100 bg-white py-2 text-center text-sm text-gray-500">
         পণ্যের দাম লোড হচ্ছে...
       </div>
     );
@@ -325,10 +320,7 @@ function PriceTicker({
 
   if (products.length === 0) {
     return (
-      <div
-        className="overflow-hidden border-t border-gray-100 bg-white py-2 text-center text-sm text-gray-500"
-        aria-label="পণ্যের দাম"
-      >
+      <div className="overflow-hidden border-t border-gray-100 bg-white py-2 text-center text-sm text-gray-500">
         পণ্যের দাম দেখানো যাচ্ছে না।
       </div>
     );
@@ -347,19 +339,14 @@ function PriceTicker({
             aria-hidden={copy === 1}
           >
             {products.map((item) => {
-              const direction = item.change?.dir;
-              const percentage = item.change?.pct ?? 0;
-              const isUp = direction === "up";
-              const isDown = direction === "down";
+              const isUp = item.change?.dir === "up";
+              const isDown = item.change?.dir === "down";
 
               return (
                 <div
                   key={`${copy}-${item.id}`}
-                  className="mx-4 flex shrink-0 items-center gap-1.5 text-sm"
-                >
-                  <span>
-                    {item.categoryIcon || item.image || "🛒"}
-                  </span>
+                  className="mx-4 flex shrink-0 items-center gap-1.5 text-sm">
+                  <span>{item.categoryIcon || item.image || "🛒"}</span>
 
                   <span className="font-semibold text-gray-800">
                     {item.nameBn}
@@ -370,9 +357,10 @@ function PriceTicker({
                   </span>
 
                   <span
-                    className={`font-bold ${isUp ? "text-red-600" : isDown ? "text-emerald-700" : "text-gray-500" }`}>
+                    className={`font-bold ${
+                      isUp ? "text-red-600" : isDown ? "text-emerald-700": "text-gray-500" }`} >
                     {isUp ? "▲" : isDown ? "▼" : "–"}{" "}
-                    {formatNumber(Math.abs(percentage))}%
+                    {formatNumber(Math.abs(item.change?.pct ?? 0))}%
                   </span>
 
                   <span className="ml-3 text-gray-300">|</span>

@@ -3,23 +3,100 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 
-const categories = [
-  { name: "সব পণ্য", emoji: "🛒", href: "/#সব-পণ্য" },
-  { name: "চাল", emoji: "🍚", href: "/category/chal" },
-  { name: "ডাল", emoji: "🍲", href: "/category/dal" },
-  { name: "তেল", emoji: "🛢️", href: "/category/tel" },
-  { name: "সবজি", emoji: "🥬", href: "/category/shobji" },
-  { name: "মাছ ", emoji: "🐟", href: "/category/mach-mangsho" },
-  { emoji: "🍗", name: "মাংস", href: "/category/mangsho" },
-  { emoji: "🥛", name: "ডিম-দুধ", href: "/category/dim-dudh" },
-  { emoji: "🌶️", name: "মসলা", href: "/category/moshla" },
-];
+const API_BASE =
+  process.env.NEXT_PUBLIC_BAZARDOR_API_URL ||
+  "https://openapi.programming-hero.com/api/bazardor";
+
+type Category = {
+  id?: string | number;
+  slug?: string;
+  nameBn?: string;
+  name?: string;
+  icon?: string;
+  emoji?: string;
+  categoryIcon?: string;
+};
+
+type Product = {
+  id: number | string;
+  slug?: string;
+  nameBn: string;
+  category?: string;
+  categoryIcon?: string;
+  image?: string;
+  unit?: string;
+  today: number;
+  yesterday?: number;
+  change?: {
+    dir?: string;
+    pct?: number;
+  };
+};
+
+function extractArray<T>(response: unknown): T[] {
+  if (Array.isArray(response)) {
+    return response as T[];
+  }
+
+  if (!response || typeof response !== "object") {
+    return [];
+  }
+
+  const obj = response as Record<string, unknown>;
+
+  // Supports API responses such as { data: [...] }
+  if (Array.isArray(obj.data)) {
+    return obj.data as T[];
+  }
+
+  if (Array.isArray(obj.categories)) {
+    return obj.categories as T[];
+  }
+
+  if (Array.isArray(obj.products)) {
+    return obj.products as T[];
+  }
+
+  // Supports nested responses such as { data: { products: [...] } }
+  if (obj.data && typeof obj.data === "object") {
+    return extractArray<T>(obj.data);
+  }
+
+  return [];
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("bn-BD", {
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+function getUnit(unit?: string) {
+  const units: Record<string, string> = {
+    kg: "কেজি",
+    kilogram: "কেজি",
+    liter: "লিটার",
+    litre: "লিটার",
+    l: "লিটার",
+    dozen: "ডজন",
+    piece: "টি",
+    pieces: "টি",
+    gram: "গ্রাম",
+    g: "গ্রাম",
+  };
+
+  return units[(unit || "kg").toLowerCase()] || unit || "কেজি";
+}
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const pathname = usePathname();
 
   const today = new Intl.DateTimeFormat("bn-BD", {
@@ -29,18 +106,89 @@ export default function Navbar() {
     year: "numeric",
   }).format(new Date());
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchNavbarData() {
+      try {
+        const [categoryResponse, productResponse] = await Promise.all([
+          fetch(`${API_BASE}/categories`),
+          fetch(`${API_BASE}/products`),
+        ]);
+
+        if (!categoryResponse.ok || !productResponse.ok) {
+          throw new Error("Failed to fetch categories or products");
+        }
+
+        const [categoryJson, productJson] = await Promise.all([
+          categoryResponse.json(),
+          productResponse.json(),
+        ]);
+
+        const categoryData = extractArray<Category>(categoryJson);
+        const productData = extractArray<Product>(productJson);
+
+        if (!cancelled) {
+          setCategories(categoryData);
+          setProducts(
+            productData.filter(
+              (product) =>
+                product.nameBn &&
+                typeof product.today === "number" &&
+                Number.isFinite(product.today)
+            )
+          );
+        }
+      } catch (error) {
+        console.error("Navbar API error:", error);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchNavbarData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const categoryLinks = [
+    {
+      name: "সব পণ্য",
+      emoji: "🛒",
+      href: "/#সব-পণ্য",
+    },
+    ...categories
+      .filter((category) => category.slug || category.id)
+      .map((category) => {
+        const slug = category.slug || String(category.id);
+
+        return {
+          name: category.nameBn || category.name || "ক্যাটাগরি",
+          emoji:
+            category.icon ||
+            category.emoji ||
+            category.categoryIcon ||
+            "🛍️",
+          href: `/category/${slug}`,
+        };
+      }),
+  ];
+
   const isActive = (href: string) => {
     if (href === "/#সব-পণ্য") {
       return pathname === "/";
     }
 
-    return pathname === href;
+    return pathname === href || pathname.startsWith(`${href}/`);
   };
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white shadow-sm">
-      
-      <div className="mx-auto container flex  items-center justify-between gap-3 px-3 py-3 sm:px-6 lg:px-8">
+      <div className="container mx-auto flex items-center justify-between gap-3 px-3 py-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-2">
           <span className="text-3xl sm:text-4xl">🛒</span>
 
@@ -55,7 +203,6 @@ export default function Navbar() {
           </span>
         </Link>
 
-       
         <div className="hidden items-center gap-2 sm:flex">
           <Link
             href="/signin"
@@ -72,7 +219,6 @@ export default function Navbar() {
           </Link>
         </div>
 
-       
         <button
           type="button"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -87,7 +233,7 @@ export default function Navbar() {
      
       <nav className="hidden border-t border-gray-100 md:block">
         <div className="mx-auto flex max-w-6xl items-center justify-center gap-2 overflow-x-auto px-4 sm:gap-5 lg:gap-8">
-          {categories.map((category) => {
+          {categoryLinks.map((category) => {
             const active = isActive(category.href);
 
             return (
@@ -109,11 +255,11 @@ export default function Navbar() {
         </div>
       </nav>
 
-    
+      {/* Mobile category navigation */}
       {menuOpen && (
         <nav className="border-t border-gray-100 bg-white p-3 md:hidden">
           <div className="grid grid-cols-2 gap-2">
-            {categories.map((category) => {
+            {categoryLinks.map((category) => {
               const active = isActive(category.href);
 
               return (
@@ -154,20 +300,39 @@ export default function Navbar() {
         </nav>
       )}
 
-      
-      <PriceTicker />
+      <PriceTicker products={products} loading={loading} />
     </header>
   );
 }
 
-function PriceTicker() {
-  const tickerItems = [
-    { emoji: "🍚", name: "চাল", price: "৬৫", unit: "কেজি", change: "২%", up: true },
-    { emoji: "🍲", name: "ডাল", price: "১২০", unit: "কেজি", change: "১%", up: false },
-    { emoji: "🛢️", name: "সয়াবিন তেল", price: "১৭৫", unit: "লিটার", change: "৩%", up: true },
-    { emoji: "🥬", name: "সবজি", price: "৪০", unit: "কেজি", change: "২%", up: false },
-    { emoji: "🥔", name: "আলু", price: "৩৫", unit: "কেজি", change: "১%", up: true },
-  ];
+function PriceTicker({
+  products,
+  loading,
+}: {
+  products: Product[];
+  loading: boolean;
+}) {
+  if (loading) {
+    return (
+      <div
+        className="overflow-hidden border-t border-gray-100 bg-white py-2 text-center text-sm text-gray-500"
+        aria-label="পণ্যের দাম"
+      >
+        পণ্যের দাম লোড হচ্ছে...
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <div
+        className="overflow-hidden border-t border-gray-100 bg-white py-2 text-center text-sm text-gray-500"
+        aria-label="পণ্যের দাম"
+      >
+        পণ্যের দাম দেখানো যাচ্ছে না।
+      </div>
+    );
+  }
 
   return (
     <div
@@ -181,26 +346,39 @@ function PriceTicker() {
             className="flex shrink-0 items-center"
             aria-hidden={copy === 1}
           >
-            {tickerItems.map((item, index) => (
-              <div
-                key={`${copy}-${index}`}
-                className="mx-4 flex shrink-0 items-center gap-1.5 text-sm"
-              >
-                <span>{item.emoji}</span>
-                <span className="font-semibold text-gray-800">
-                  {item.name}
-                </span>
-                <span className="text-gray-500">৳{item.price}/{item.unit}</span>
-                <span
-                  className={`font-bold ${
-                    item.up ? "text-red-600" : "text-emerald-700"
-                  }`}
+            {products.map((item) => {
+              const direction = item.change?.dir;
+              const percentage = item.change?.pct ?? 0;
+              const isUp = direction === "up";
+              const isDown = direction === "down";
+
+              return (
+                <div
+                  key={`${copy}-${item.id}`}
+                  className="mx-4 flex shrink-0 items-center gap-1.5 text-sm"
                 >
-                  {item.up ? "▲" : "▼"} {item.change}
-                </span>
-                <span className="ml-3 text-gray-300">|</span>
-              </div>
-            ))}
+                  <span>
+                    {item.categoryIcon || item.image || "🛒"}
+                  </span>
+
+                  <span className="font-semibold text-gray-800">
+                    {item.nameBn}
+                  </span>
+
+                  <span className="text-gray-500">
+                    ৳{formatNumber(item.today)}/{getUnit(item.unit)}
+                  </span>
+
+                  <span
+                    className={`font-bold ${isUp ? "text-red-600" : isDown ? "text-emerald-700" : "text-gray-500" }`}>
+                    {isUp ? "▲" : isDown ? "▼" : "–"}{" "}
+                    {formatNumber(Math.abs(percentage))}%
+                  </span>
+
+                  <span className="ml-3 text-gray-300">|</span>
+                </div>
+              );
+            })}
           </div>
         ))}
       </div>

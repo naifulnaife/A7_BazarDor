@@ -1,9 +1,14 @@
-import type { Product } from "@/types/product";
+
+import type { Product } from "../types/product";
 import ProductCard from "@/components/ProductCard";
 
 function getChange(product: Product) {
   return Number(
-    product.change?.pct ?? product.changePercentage ??product.priceChange ?? 0 );
+    product.change?.pct ??
+      product.changePercentage ??
+      product.priceChange ??
+      0
+  );
 }
 
 function ProductGrid({ products }: { products: Product[] }) {
@@ -29,46 +34,48 @@ export default function ProductSections({
 }: {
   products: Product[];
 }) {
-  const risers = [...products].filter((product) => getChange(product) > 0).sort((a, b) => getChange(b) - getChange(a)).slice(0, 6);
+  const risers = [...products]
+    .filter((product) => getChange(product) > 0)
+    .sort((a, b) => getChange(b) - getChange(a))
+    .slice(0, 6);
 
-  const fallers = [...products].filter((product) => getChange(product) < 0).sort((a, b) => getChange(a) - getChange(b)).slice(0, 6);
+  const fallers = [...products]
+    .filter((product) => getChange(product) < 0)
+    .sort((a, b) => getChange(a) - getChange(b))
+    .slice(0, 6);
 
   return (
-   <div className="bg-linear-to-br from-emerald-50 via-green-50 to-emerald-50 ">
-     <div className="mx-auto container  space-y-12  py-10">
-     
-      <section>
-        <div className="mb-5">
-          <h2 className="text-xl font-extrabold text-gray-900 sm:text-2xl">
-            আজ দাম বেড়েছে{" "}
-            <span className="text-red-600">▲</span>
-          </h2>
-        </div>
+    <div className="bg-linear-to-br from-emerald-50 via-green-50 to-emerald-50">
+      <div className="container mx-auto space-y-12 py-10">
+        <section>
+          <div className="mb-5">
+            <h2 className="text-xl font-extrabold text-gray-900 sm:text-2xl">
+              আজ দাম বেড়েছে{" "}
+              <span className="text-red-600">▲</span>
+            </h2>
+          </div>
+          <ProductGrid products={risers} />
+        </section>
 
-        <ProductGrid products={risers} />
-      </section>
+        <section>
+          <div className="mb-5">
+            <h2 className="text-xl font-extrabold text-gray-900 sm:text-2xl">
+              আজ দাম কমেছে{" "}
+              <span className="text-green-600">▼</span>
+            </h2>
+          </div>
+          <ProductGrid products={fallers} />
+        </section>
 
-      <section>
-        <div className="mb-5">
-          <h2 className="text-xl font-extrabold text-gray-900 sm:text-2xl">
-            আজ দাম কমেছে{" "}
-            <span className="text-green-600">▼</span>
-          </h2>
-        </div>
-
-        <ProductGrid products={fallers} />
-      </section>
-
-      <section id="সব-পণ্য" className="scroll-mt-40">
-        <div className="mb-5">
-          <h2 className="text-xl font-extrabold text-gray-900 sm:text-2xl">
-            সব পণ্য
-          </h2>
-        </div>
-
-        <ProductGrid products={products} />
-      </section>
+        <section id="সব-পণ্য" className="scroll-mt-40">
+          <div className="mb-5">
+            <h2 className="text-xl font-extrabold text-gray-900 sm:text-2xl">
+              সব পণ্য
+            </h2>
+          </div>
+          <ProductGrid products={products} />
+        </section>
+      </div>
     </div>
-   </div>
   );
 }

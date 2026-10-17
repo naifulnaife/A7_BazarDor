@@ -1,9 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import {
+  Menu,
+  X,
+  ChevronDown,
+  UserRound,
+} from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
+import Image from "next/image";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_BAZARDOR_API_URL ||
@@ -44,7 +52,12 @@ function extractArray<T>(response: unknown): T[] {
 
   const obj = response as Record<string, unknown>;
 
-  for (const key of ["data", "categories", "products", "result"]) {
+  for (const key of [
+    "data",
+    "categories",
+    "products",
+    "result",
+  ]) {
     const value = obj[key];
 
     if (Array.isArray(value)) {
@@ -53,7 +66,10 @@ function extractArray<T>(response: unknown): T[] {
 
     if (value && typeof value === "object") {
       const nested = extractArray<T>(value);
-      if (nested.length > 0) return nested;
+
+      if (nested.length > 0) {
+        return nested;
+      }
     }
   }
 
@@ -85,11 +101,21 @@ function getUnit(unit?: string) {
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [logoutLoading, setLogoutLoading] = useState(false);
 
   const pathname = usePathname();
+  const router = useRouter();
+
+  const {
+    data: session,
+    isPending: sessionLoading,
+  } = authClient.useSession();
+
+  const user = session?.user;
 
   const today = new Intl.DateTimeFormat("bn-BD", {
     weekday: "long",
@@ -98,19 +124,21 @@ export default function Navbar() {
     year: "numeric",
   }).format(new Date());
 
+  // Fetch categories and products
   useEffect(() => {
     const controller = new AbortController();
 
     async function fetchNavbarData() {
       try {
-        const [categoryResponse, productResponse] = await Promise.all([
-          fetch(`${API_BASE}/categories`, {
-            signal: controller.signal,
-          }),
-          fetch(`${API_BASE}/products`, {
-            signal: controller.signal,
-          }),
-        ]);
+        const [categoryResponse, productResponse] =
+          await Promise.all([
+            fetch(`${API_BASE}/categories`, {
+              signal: controller.signal,
+            }),
+            fetch(`${API_BASE}/products`, {
+              signal: controller.signal,
+            }),
+          ]);
 
         if (!categoryResponse.ok || !productResponse.ok) {
           throw new Error("Could not fetch navbar data.");
@@ -121,8 +149,11 @@ export default function Navbar() {
           productResponse.json(),
         ]);
 
-        const categoryData = extractArray<Category>(categoryJson);
-        const productData = extractArray<Product>(productJson);
+        const categoryData =
+          extractArray<Category>(categoryJson);
+
+        const productData =
+          extractArray<Product>(productJson);
 
         setCategories(
           categoryData.filter((category) => category.slug)
@@ -155,6 +186,36 @@ export default function Navbar() {
     return () => controller.abort();
   }, []);
 
+  async function handleLogout() {
+    if (logoutLoading) return;
+
+    setLogoutLoading(true);
+
+    try {
+      const { error } = await authClient.signOut();
+
+      if (error) {
+        toast.error(
+          error.message || "সাইন আউট করা যায়নি।"
+        );
+        return;
+      }
+
+      setProfileOpen(false);
+      setMenuOpen(false);
+
+      toast.success("সফলভাবে লগআউট হয়েছে!");
+
+      router.push("/signin");
+      router.refresh();
+    } catch {
+      toast.error("লগআউট করার সময় সমস্যা হয়েছে।");
+    } finally {
+      setLogoutLoading(false);
+    }
+  }
+
+  // Category navigation links
   const categoryLinks = [
     {
       name: "সব পণ্য",
@@ -185,9 +246,16 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white shadow-sm">
-      {/* Logo and account buttons */}
+      {/* Logo and desktop account buttons */}
       <div className="container mx-auto flex items-center justify-between gap-3 px-3 py-3 sm:px-6 lg:px-8">
-        <Link href="/" className="flex min-w-0 items-center gap-2">
+        <Link
+          href="/"
+          onClick={() => {
+            setMenuOpen(false);
+            setProfileOpen(false);
+          }}
+          className="flex min-w-0 items-center gap-2"
+        >
           <span className="text-3xl sm:text-4xl">🛒</span>
 
           <span className="min-w-0">
@@ -201,27 +269,116 @@ export default function Navbar() {
           </span>
         </Link>
 
+        {/* Desktop account section */}
         <div className="hidden items-center gap-2 sm:flex">
-          <Link
-            href="/signin"
-            className="rounded-lg border border-emerald-600 px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50 sm:px-4"
-          >
-            সাইন ইন
-          </Link>
+          {sessionLoading ? (
+            <div
+              className="animate-pulse rounded-lg bg-gray-100 h-9 w-28"
+              aria-label="অ্যাকাউন্ট লোড হচ্ছে"
+            />
+          ) : user ? (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() =>
+                  setProfileOpen((open) => !open)
+                }
+                aria-expanded={profileOpen}
+                aria-haspopup="true"
+                aria-label="প্রোফাইল মেনু"
+                className="flex items-center gap-2 rounded-lg px-2 py-1 transition hover:bg-gray-50"
+              >
+                {user.image ? (
+                  <Image
+                    src={user.image}
+                    alt=""
+                    referrerPolicy="no-referrer"
+                    className="h-9 w-9 shrink-0 rounded-xl object-cover"
+                  />
+                ) : (
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
+                    <UserRound size={20} />
+                  </span>
+                )}
 
-          <Link
-            href="/signup"
-            className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 sm:px-4"
-          >
-            সাইন আপ
-          </Link>
+                <span className="max-w-32 truncate text-sm font-medium text-gray-800">
+                  {user.name || user.email}
+                </span>
+
+                <ChevronDown
+                  size={12}
+                  className={`shrink-0 text-gray-500 transition-transform ${
+                    profileOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {profileOpen && (
+                <div className="z-[100] mt-2 w-64 rounded-2xl border border-gray-200 bg-white p-3 shadow-lg absolute right-0 top-full">
+                  <div className="px-2 py-1">
+                    <p className="truncate text-sm font-semibold text-gray-800">
+                      {user.name || "নাম দেওয়া হয়নি"}
+                    </p>
+                    <p className="mt-1 break-all text-xs text-gray-500">
+                      {user.email}
+                    </p>
+                  </div>
+
+                  <div className="my-2 border-t border-gray-100" />
+
+                  <Link
+                    href="/profile"
+                    onClick={() => setProfileOpen(false)}
+                    className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-gray-700 transition hover:bg-gray-50"
+                  >
+                    <UserRound
+                      size={16}
+                      className="text-blue-600"
+                    />
+                    আমার প্রোফাইল
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    disabled={logoutLoading}
+                    className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <span aria-hidden="true">↪</span>
+                    {logoutLoading
+                      ? "সাইন আউট হচ্ছে..."
+                      : "সাইন আউট"}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/signin"
+                className="rounded-lg px-3 py-2 text-sm font-semibold transition sm:px-4 border border-emerald-600 text-emerald-700 hover:bg-emerald-50"
+              >
+                সাইন ইন
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-lg px-3 py-2 text-sm font-semibold transition sm:px-4 bg-emerald-600 text-white hover:bg-emerald-700"
+              >
+                সাইন আপ
+              </Link>
+            </div>
+          )}
         </div>
 
+        {/* Mobile menu button */}
         <button
           type="button"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((open) => !open)}
+          onClick={() => {
+            setMenuOpen((open) => !open);
+            setProfileOpen(false);
+          }}
           className="rounded-lg p-2 text-emerald-800 hover:bg-emerald-50 sm:hidden"
         >
           {menuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -278,26 +435,116 @@ export default function Navbar() {
             })}
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2 border-t border-gray-100 pt-3">
-            <Link
-              href="/signin"
-              onClick={() => setMenuOpen(false)}
-              className="rounded-lg border border-emerald-600 px-3 py-2.5 text-center text-sm font-semibold text-emerald-700"
-            >
-              সাইন ইন
-            </Link>
+          {/* Mobile account section */}
+          <div className="mt-3 border-t border-gray-100 pt-3">
+            {sessionLoading ? (
+              <div
+                className="animate-pulse rounded-lg bg-gray-100 h-10 w-full"
+                aria-label="অ্যাকাউন্ট লোড হচ্ছে"
+              />
+            ) : user ? (
+              <div className="relative w-full">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setProfileOpen((open) => !open)
+                  }
+                  aria-expanded={profileOpen}
+                  aria-haspopup="true"
+                  aria-label="প্রোফাইল মেনু"
+                  className="flex items-center gap-2 rounded-lg px-2 py-1 transition hover:bg-gray-50 w-full border border-gray-100"
+                >
+                  {user.image ? (
+                    <Image
+                      src={user.image}
+                      alt=""
+                      referrerPolicy="no-referrer"
+                      className="h-9 w-9 shrink-0 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
+                      <UserRound size={20} />
+                    </span>
+                  )}
 
-            <Link
-              href="/signup"
-              onClick={() => setMenuOpen(false)}
-              className="rounded-lg bg-emerald-600 px-3 py-2.5 text-center text-sm font-semibold text-white"
-            >
-              সাইন আপ
-            </Link>
+                  <span className="max-w-32 truncate text-sm font-medium text-gray-800">
+                    {user.name || user.email}
+                  </span>
+
+                  <ChevronDown
+                    size={12}
+                    className={`shrink-0 text-gray-500 transition-transform ml-auto ${
+                      profileOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {profileOpen && (
+                  <div className="z-[100] mt-2 w-full rounded-2xl border border-gray-200 bg-white p-3 shadow-lg relative">
+                    <div className="px-2 py-1">
+                      <p className="truncate text-sm font-semibold text-gray-800">
+                        {user.name || "নাম দেওয়া হয়নি"}
+                      </p>
+                      <p className="mt-1 break-all text-xs text-gray-500">
+                        {user.email}
+                      </p>
+                    </div>
+
+                    <div className="my-2 border-t border-gray-100" />
+
+                    <Link
+                      href="/profile"
+                      onClick={() => {
+                        setProfileOpen(false);
+                        setMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-gray-700 transition hover:bg-gray-50"
+                    >
+                      <UserRound
+                        size={16}
+                        className="text-blue-600"
+                      />
+                      আমার প্রোফাইল
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      disabled={logoutLoading}
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <span aria-hidden="true">↪</span>
+                      {logoutLoading
+                        ? "সাইন আউট হচ্ছে..."
+                        : "সাইন আউট"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href="/signin"
+                  onClick={() => setMenuOpen(false)}
+                  className="w-full rounded-lg px-3 py-2.5 text-center text-sm font-semibold border border-emerald-600 text-emerald-700 hover:bg-emerald-50"
+                >
+                  সাইন ইন
+                </Link>
+
+                <Link
+                  href="/signup"
+                  onClick={() => setMenuOpen(false)}
+                  className="w-full rounded-lg px-3 py-2.5 text-center text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700"
+                >
+                  সাইন আপ
+                </Link>
+              </div>
+            )}
           </div>
         </nav>
       )}
 
+      {/* Scrolling product price ticker */}
       <PriceTicker products={products} loading={loading} />
     </header>
   );
@@ -312,8 +559,9 @@ function PriceTicker({
 }) {
   if (loading) {
     return (
-      <div className="overflow-hidden border-t border-gray-100 bg-white py-2 text-center text-sm text-gray-500">
-        পণ্যের দাম লোড হচ্ছে...
+      <div className="flex animate-pulse items-center justify-center gap-2 border-t border-gray-100 bg-white py-2 text-sm text-gray-500">
+        <span className="h-3 w-24 rounded bg-gray-200" />
+        <span>দাম লোড হচ্ছে...</span>
       </div>
     );
   }
@@ -345,8 +593,11 @@ function PriceTicker({
               return (
                 <div
                   key={`${copy}-${item.id}`}
-                  className="mx-4 flex shrink-0 items-center gap-1.5 text-sm">
-                  <span>{item.categoryIcon || item.image || "🛒"}</span>
+                  className="mx-4 flex shrink-0 items-center gap-1.5 text-sm"
+                >
+                  <span>
+                    {item.categoryIcon || item.image || "🛒"}
+                  </span>
 
                   <span className="font-semibold text-gray-800">
                     {item.nameBn}
@@ -358,12 +609,23 @@ function PriceTicker({
 
                   <span
                     className={`font-bold ${
-                      isUp ? "text-red-600" : isDown ? "text-emerald-700": "text-gray-500" }`} >
+                      isUp
+                        ? "text-red-600"
+                        : isDown
+                          ? "text-emerald-700"
+                          : "text-gray-500"
+                    }`}
+                  >
                     {isUp ? "▲" : isDown ? "▼" : "–"}{" "}
-                    {formatNumber(Math.abs(item.change?.pct ?? 0))}%
+                    {formatNumber(
+                      Math.abs(item.change?.pct ?? 0)
+                    )}
+                    %
                   </span>
 
-                  <span className="ml-3 text-gray-300">|</span>
+                  <span className="ml-3 text-gray-300">
+                    |
+                  </span>
                 </div>
               );
             })}

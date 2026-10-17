@@ -1,14 +1,25 @@
 
-import Link from "next/link";
+"use client";
+
 import Image from "next/image";
-import type { Product } from "@/types/product";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
+import type { Product } from "../types/product";
 
 function bengaliNumber(value: number) {
-  return new Intl.NumberFormat("bn-BD", { maximumFractionDigits: 2,}).format(value);}
+  return new Intl.NumberFormat("bn-BD", {
+    maximumFractionDigits: 2,
+  }).format(value);
+}
 
-export default function ProductCard({ product,}: {
+export default function ProductCard({
+  product,
+}: {
   product: Product;
 }) {
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
+
   const price = Number(
     product.today ?? product.currentPrice ?? product.price ?? 0
   );
@@ -20,30 +31,59 @@ export default function ProductCard({ product,}: {
       0
   );
 
-  
-  const image = product.image ?? product.emoji ?? product.categoryIcon ?? "🛒";
+  const image =
+    product.image ?? product.emoji ?? product.categoryIcon ?? "🛒";
 
   const unit = product.unit ?? "কেজি";
   const name = product.nameBn ?? product.name ?? "পণ্যের নাম নেই";
-  const slug = product.slug ?? String(product.id);
 
   const changeStyle =
-    change > 0? "bg-red-50 text-red-600": change < 0? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500";
+    change > 0
+      ? "bg-red-50 text-red-600"
+      : change < 0
+        ? "bg-green-50 text-green-600"
+        : "bg-gray-100 text-gray-500";
 
   const changeLabel =
-    change > 0? `▲ ${bengaliNumber(Math.abs(change))}%`:change < 0? `▼ ${bengaliNumber(Math.abs(change))}%`: "— ০.০%";
+    change > 0
+      ? `▲ ${bengaliNumber(Math.abs(change))}%`
+      : change < 0
+        ? `▼ ${bengaliNumber(Math.abs(change))}%`
+        : "— ০.০%";
 
-  const isImageUrl =typeof image === "string" &&(image.startsWith("https://") || image.startsWith("http://"));
+  const isImageUrl =
+    typeof image === "string" && /^https?:\/\//.test(image);
+
+  function handleProductClick() {
+    if (isPending) return;
+
+    if (!session?.user) {
+      router.push("/signin");
+      return;
+    }
+
+    router.push(`/product/${product.id}`);
+  }
 
   return (
-    <Link
-      href={`/product/${product.id}`}
-      className="group flex min-w-0 flex-col justify-between rounded-2xl border border-[#dfe7df] bg-[#fbfdfb] p-3.5 transition hover:border-emerald-300 hover:shadow-md sm:p-4" >
-    
+    <button
+      type="button"
+      onClick={handleProductClick}
+      disabled={isPending}
+      aria-label={`বিস্তারিত দেখুন: ${name}`}
+      className="group flex min-w-0 w-full flex-col justify-between rounded-2xl border border-[#dfe7df] bg-[#fbfdfb] p-3.5 text-left transition hover:border-emerald-300 hover:shadow-md disabled:cursor-wait sm:p-4"
+    >
       <div className="flex items-start gap-3">
         <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#f0f5f0]">
           {isImageUrl ? (
-            <Image src={image}alt={name}fill sizes="48px" className="object-contain p-1.5" />
+            <Image
+              src={image}
+              alt={name}
+              fill
+              sizes="48px"
+              unoptimized
+              className="object-contain p-1.5"
+            />
           ) : (
             <span className="text-2xl" role="img" aria-label={name}>
               {image}
@@ -62,11 +102,9 @@ export default function ProductCard({ product,}: {
         </div>
       </div>
 
-      {/* Price and change badge */}
       <div className="mt-3 flex items-end justify-between gap-2">
         <div className="min-w-0">
           <p className="text-xs text-[#59635b]">আজকের দাম</p>
-
           <p className="mt-0.5 text-base font-extrabold leading-6 text-[#202b23] sm:text-lg">
             {bengaliNumber(price)} টাকা
           </p>
@@ -78,6 +116,6 @@ export default function ProductCard({ product,}: {
           {changeLabel}
         </span>
       </div>
-    </Link>
+    </button>
   );
 }

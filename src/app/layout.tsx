@@ -4,14 +4,14 @@ import { Noto_Serif_Bengali } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-
+import { Toaster } from "sonner";
 const notoSerifBengali = Noto_Serif_Bengali({
   variable: "--font-noto-serif-bengali",
   subsets: ["latin", "bengali"],
 });
 
 export const metadata: Metadata = {
-  title: "বাজার দর | আজকের বাজারের দাম",
+  title: "বাজার দর",
   description: "নিত্যপ্রয়োজনীয় পণ্যের বাজারদর এক নজরে দেখুন।",
 };
 
@@ -29,6 +29,7 @@ export default function RootLayout({
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

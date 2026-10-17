@@ -1,7 +1,7 @@
 
 import Banner from "@/components/Banner";
 import ProductSections from "@/components/ProductSections";
-import type { Product } from "@/types/product";
+import type { Product } from "../types/product";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_BAZARDOR_API_URL ||

@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
-import Image from "next/image";
+
 
 const API_BASE =
   process.env.NEXT_PUBLIC_BAZARDOR_API_URL ||
@@ -124,7 +124,7 @@ export default function Navbar() {
     year: "numeric",
   }).format(new Date());
 
-  // Fetch categories and products
+  
   useEffect(() => {
     const controller = new AbortController();
 
@@ -288,18 +288,9 @@ export default function Navbar() {
                 aria-label="প্রোফাইল মেনু"
                 className="flex items-center gap-2 rounded-lg px-2 py-1 transition hover:bg-gray-50"
               >
-                {user.image ? (
-                  <Image
-                    src={user.image}
-                    alt=""
-                    referrerPolicy="no-referrer"
-                    className="h-9 w-9 shrink-0 rounded-xl object-cover"
-                  />
-                ) : (
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
-                    <UserRound size={20} />
-                  </span>
-                )}
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                <UserRound size={20} />
+               </span>
 
                 <span className="max-w-32 truncate text-sm font-medium text-gray-800">
                   {user.name || user.email}
@@ -454,19 +445,9 @@ export default function Navbar() {
                   aria-label="প্রোফাইল মেনু"
                   className="flex items-center gap-2 rounded-lg px-2 py-1 transition hover:bg-gray-50 w-full border border-gray-100"
                 >
-                  {user.image ? (
-                    <Image
-                      src={user.image}
-                      alt=""
-                      referrerPolicy="no-referrer"
-                      className="h-9 w-9 shrink-0 rounded-xl object-cover"
-                    />
-                  ) : (
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
-                      <UserRound size={20} />
-                    </span>
-                  )}
-
+                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                 <UserRound size={20} />
+                 </span>
                   <span className="max-w-32 truncate text-sm font-medium text-gray-800">
                     {user.name || user.email}
                   </span>

@@ -293,9 +293,22 @@ export default function Navbar() {
                 aria-label="প্রোফাইল মেনু"
                 className="flex items-center gap-2 rounded-lg px-2 py-1 transition hover:bg-gray-50"
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
-                <UserRound size={20} />
-               </span>
+               
+<span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-emerald-50 text-emerald-700">
+  {user.image ? (
+    <Image
+      src={user.image}
+      alt={user.name || "Profile picture"}
+      width={36}
+      height={36}
+      unoptimized
+      className="h-full w-full object-cover"
+    />
+  ) : (
+    <UserRound size={20} />
+  )}
+</span>
+
 
                 <span className="max-w-32 truncate text-sm font-medium text-gray-800">
                   {user.name || user.email}

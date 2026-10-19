@@ -53,7 +53,7 @@ export default function Banner() {
                 width={700}
                 height={700}
                 priority
-                className="relative h-64 w-full rounded-2xl object-cover sm:h-80 md:h-[420px]"
+                className="relative h-64 w-full rounded-2xl object-cover sm:h-80 md:h-105"
               />
             </div>
           </div>

@@ -288,7 +288,7 @@ const priceDifference = product.today - product.yesterday;
 
           {markets.length > 0 ? (
             <div className="overflow-x-auto rounded-lg border border-[#e6ece6]">
-              <table className="w-full min-w-[460px] border-collapse text-left text-xs">
+              <table className="w-full min-w-115 border-collapse text-left text-xs">
                 <thead>
                   <tr className="bg-[#f8fbf8] text-[#667168]">
                     <th className="px-3 py-2 font-medium">বাজার</th>

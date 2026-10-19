@@ -46,7 +46,7 @@ export default function ProductSections({
 
   return (
     <div className=" bg-[#fbfdfb]">
-      <div className="container mx-auto space-y-12 py-10">
+      <div className="container mx-auto space-y-12 sm:px-5 px-5 lg:px-0 py-10">
         <section>
           <div className="mb-5">
             <h2 className="text-xl font-extrabold text-gray-900 sm:text-2xl">

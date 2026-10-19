@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# বাজার দর (BazarDor)
 
-## Getting Started
+বাজার দর is a responsive web application that helps users check daily prices of essential products in Bangladesh, compare price changes, and explore market-wise prices.
 
-First, run the development server:
+**Live Link:** []  
+**GitHub Repository:** [(https://github.com/naifulnaife/A7_BazarDor)]
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Key Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Daily Price Updates: View product prices and track rising or falling prices.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2. Product Categories: Browse products by category and sort them by price.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Product Details: Explore minimum, maximum, average, and market-wise prices.
 
-## Learn More
+4. User Authentication: Sign up, sign in, and access protected pages using Better Auth.
 
-To learn more about Next.js, take a look at the following resources:
+5. Profile Management: View and update profile information with a responsive interface.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Technologies Used
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Next.js (App Router)
+- React and TypeScript
+- Tailwind CSS
+- Better Auth
+- MongoDB
+- React Hot Toast
+- Lucide React
+- BazarDor API
 
-## Deploy on Vercel
+## API
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Main API:**  
+`https://openapi.programming-hero.com/api/bazardor`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Endpoints:**
+- `/products`
+- `/products?category=chal`
+- `/products/1`
+- `/categories`
+- `/categories/chal`
+
+
+
+## Author
+
+**Name:** Naiful Islam 
+**Project:** B14-A7—BazarDor
+
+## Disclaimer
+
+Product prices are indicative and may change depending on market conditions.

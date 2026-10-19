@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
+import { FcGoogle } from "react-icons/fc";
+import { FaGithub } from "react-icons/fa";
 
 export default function SigninPage() {
   const router = useRouter();
@@ -64,11 +66,11 @@ export default function SigninPage() {
     <main className="flex min-h-[75vh] items-center justify-center bg-gray-50 px-4 py-12">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg sm:p-8">
         <h1 className="mb-2 text-center text-3xl font-bold text-gray-900">
-          স্বাগতম!
+          সাইন ইন
         </h1>
 
-        <p className="mb-6 text-center text-gray-500">
-          আপনার বাজার দর অ্যাকাউন্টে লগইন করুন
+        <p className="text-sm mb-6 text-center text-gray-500">
+          বিস্তারিত দাম, বাজার তুলনা ও প্রোফাইল দেখতে অ্যাকাউন্টে ঢুকুন।
         </p>
 
         <form onSubmit={handleSignin} className="space-y-4">
@@ -84,7 +86,7 @@ export default function SigninPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-purple-600"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-green-600"
             />
           </div>
 
@@ -107,7 +109,7 @@ export default function SigninPage() {
           <button
             type="submit"
             disabled={loading || !!socialLoading}
-            className="w-full rounded-lg bg-purple-700 px-4 py-3 font-semibold text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-lg bg-green-700 px-4 py-3 font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "লগইন হচ্ছে..." : "সাইন ইন"}
           </button>
@@ -119,35 +121,47 @@ export default function SigninPage() {
           <div className="h-px flex-1 bg-gray-200" />
         </div>
 
-        <div className="space-y-3">
-          <button
-            type="button"
-            onClick={() => handleSocial("google")}
-            disabled={loading || !!socialLoading}
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 font-medium hover:bg-gray-50 disabled:opacity-60"
-          >
-            {socialLoading === "google"
-              ? "Google-এ সংযোগ হচ্ছে..."
-              : "Google দিয়ে লগইন"}
-          </button>
+        <div className="flex gap-2 flex-col lg:flex-row">
+    
+<button
+  type="button"
+  onClick={() => handleSocial("google")}
+  disabled={loading || !!socialLoading}
+  className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 px-4 py-3 font-medium transition hover:bg-gray-50 disabled:opacity-60"
+>
+  {socialLoading === "google" ? (
+    "Google-এ সংযোগ হচ্ছে..."
+  ) : (
+    <>
+      <FcGoogle size={22} />
+      <span className="text-sm">Google দিয়ে লগইন</span>
+    </>
+  )}
+</button>
 
-          <button
-            type="button"
-            onClick={() => handleSocial("github")}
-            disabled={loading || !!socialLoading}
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 font-medium hover:bg-gray-50 disabled:opacity-60"
-          >
-            {socialLoading === "github"
-              ? "GitHub-এ সংযোগ হচ্ছে..."
-              : "GitHub দিয়ে লগইন"}
-          </button>
+<button
+  type="button"
+  onClick={() => handleSocial("github")}
+  disabled={loading || !!socialLoading}
+  className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 px-4 py-3 font-medium transition hover:bg-gray-50 disabled:opacity-60"
+>
+  {socialLoading === "github" ? (
+    "GitHub-এ সংযোগ হচ্ছে..."
+  ) : (
+    <>
+      <FaGithub size={22} />
+      <span className="text-sm">GitHub দিয়ে লগইন</span>
+    </>
+  )}
+</button>
+
         </div>
 
         <p className="mt-6 text-center text-sm text-gray-600">
           অ্যাকাউন্ট নেই?{" "}
           <Link
             href="/signup"
-            className="font-semibold text-purple-700 hover:underline"
+            className="font-semibold text-green-700 hover:underline"
           >
             সাইন আপ করুন
           </Link>

@@ -136,9 +136,9 @@ export default function ProductDetailsPage() {
 
   if (error || !product) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f0f5f0] px-4">
-        <div className="rounded-xl border border-[#e1e9e1] bg-[#fbfdfb] p-8 text-center">
-          <div className="text-5xl">🛒</div>
+      <main className="flex min-h-screen items-center justify-center bg-[#f0f5f0] ">
+        <div className="rounded-xl border border-[#e1e9e1] bg-[#fbfdfb] lg:p-30 p-20 text-center">
+          <div className="text-7xl font-bold text-red-600">404</div>
           <h1 className="mt-4 text-xl font-bold text-[#263129]">
             পণ্য পাওয়া যায়নি
           </h1>
@@ -178,7 +178,7 @@ export default function ProductDetailsPage() {
 
   const isUp = product.change?.dir === "up";
   const isDown = product.change?.dir === "down";
-
+const priceDifference = product.today - product.yesterday;
   return (
     <main className="min-h-screen bg-[#f0f5f0] px-3 py-5 text-[#263129] sm:px-5 sm:py-8">
       <div className="container mx-auto">
@@ -217,11 +217,15 @@ export default function ProductDetailsPage() {
                 {product.nameBn}
               </h1>
               <p className="mt-1 text-xs text-[#778078]">
-                প্রতি {product.unit || "কেজি"} · {product.categoryNameBn}
+                প্রতি কেজি · {product.categoryNameBn}
               </p>
               <p className="mt-1 text-[10px] text-[#59655b]">
-                বর্তমান বাজারদর এবং মূল্য পরিবর্তন
-              </p>
+  {priceDifference > 0
+    ? `গতকালের তুলনায় আজ দাম বেড়েছে · ${bengaliNumber(priceDifference)} টাকা`
+    : priceDifference < 0
+      ? `গতকালের তুলনায় আজ দাম কমেছে · ${bengaliNumber(Math.abs(priceDifference))} টাকা`
+      : "গতকালের তুলনায় আজ দাম অপরিবর্তিত"}
+</p>
             </div>
 
             <div className="shrink-0 rounded-lg bg-[#f0f5f0] px-3 py-2 text-center">
@@ -232,7 +236,7 @@ export default function ProductDetailsPage() {
                 {bengaliNumber(product.today)}
               </p>
               <span className="text-[10px] text-[#667168]">
-                টাকা / {product.unit || "কেজি"}
+                টাকা / কেজি
               </span>
               <p
                 className={`mt-1 text-xs font-bold ${
@@ -258,18 +262,21 @@ export default function ProductDetailsPage() {
               <p className="mt-1 font-extrabold text-green-600">
                 {bengaliNumber(minPrice)} টাকা
               </p>
+              <p className="text-[10px] text-[#667168]">সবচেয়ে কম দামের বাজার</p>
             </div>
             <div className="rounded-lg border border-[#e6ece6] p-2 sm:p-3">
               <p className="text-[10px] text-[#667168]">সর্বোচ্চ দাম</p>
               <p className="mt-1 font-extrabold text-red-600">
                 {bengaliNumber(maxPrice)} টাকা
               </p>
+              <p className="text-[10px] text-[#667168]">সবচেয়ে বেশি দামের বাজার</p>
             </div>
             <div className="rounded-lg border border-[#e6ece6] p-2 sm:p-3">
               <p className="text-[10px] text-[#667168]">গড় দাম</p>
               <p className="mt-1 font-extrabold text-green-600">
                 {bengaliNumber(averagePrice)} টাকা
               </p>
+              <p className="text-[10px] text-[#667168]">প্রতি কেজি-এর হিসাবে</p>
             </div>
           </div>
         </section>

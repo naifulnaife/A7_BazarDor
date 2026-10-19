@@ -71,7 +71,7 @@ export default function ProductCard({
       onClick={handleProductClick}
       disabled={isPending}
       aria-label={`বিস্তারিত দেখুন: ${name}`}
-      className="group flex min-w-0 w-full flex-col justify-between rounded-2xl border border-[#dfe7df] bg-[#fbfdfb] p-3.5 text-left transition hover:border-emerald-300 hover:shadow-md disabled:cursor-wait sm:p-4"
+      className="group flex min-w-0 w-full flex-col justify-between rounded-2xl border border-[#dfe7df] bg-white p-3.5 text-left transition hover:border-emerald-300 hover:shadow-md disabled:cursor-wait sm:p-4"
     >
       <div className="flex items-start gap-3">
         <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#f0f5f0]">
@@ -97,7 +97,7 @@ export default function ProductCard({
           </h3>
 
           <p className="mt-0.5 text-xs text-[#667168]">
-            প্রতি {unit.replace(/^প্রতি\s*/, "")}
+            প্রতি কেজি
           </p>
         </div>
       </div>

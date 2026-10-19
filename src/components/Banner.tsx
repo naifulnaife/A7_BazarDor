@@ -12,7 +12,7 @@ const today = new Intl.DateTimeFormat("bn-BD", {
 export default function Banner() {
   return (
    
-    <section className="bg-linear-to-br from-emerald-50 via-green-50 to-emerald-50 px-4 py-8 sm:px-6 sm:py-12">
+    <section className=" bg-[#fbfdfb] px-4 py-8 sm:px-6 sm:py-12">
    
       <div className="container mx-auto  overflow-hidden rounded-3xl bg-white shadow-sm">
         <div className="grid items-center  gap-8 px-5 py-8 sm:px-8 sm:py-12 md:grid-cols-2 md:gap-10 md:px-10 lg:px-12">

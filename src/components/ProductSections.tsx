@@ -45,7 +45,7 @@ export default function ProductSections({
     .slice(0, 6);
 
   return (
-    <div className="bg-linear-to-br from-emerald-50 via-green-50 to-emerald-50">
+    <div className=" bg-[#fbfdfb]">
       <div className="container mx-auto space-y-12 py-10">
         <section>
           <div className="mb-5">

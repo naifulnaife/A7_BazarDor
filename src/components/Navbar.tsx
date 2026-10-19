@@ -3,14 +3,10 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  Menu,
-  X,
-  ChevronDown,
-  UserRound,
-} from "lucide-react";
+import {Menu, X, ChevronDown, UserRound,} from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
+import Image from "next/image";
 
 
 const API_BASE =
@@ -215,12 +211,12 @@ export default function Navbar() {
     }
   }
 
-  // Category navigation links
+  
   const categoryLinks = [
     {
-      name: "সব পণ্য",
+      name: "হোম",
       emoji: "🛒",
-      href: "/#সব-পণ্য",
+      href: "/",
     },
     ...categories.map((category) => ({
       name: category.nameBn || category.name || "ক্যাটাগরি",
@@ -234,7 +230,7 @@ export default function Navbar() {
   ];
 
   function isActive(href: string) {
-    if (href === "/#সব-পণ্য") {
+    if (href === "/") {
       return pathname === "/";
     }
 
@@ -246,7 +242,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white shadow-sm">
-      {/* Logo and desktop account buttons */}
+      
       <div className="container mx-auto flex items-center justify-between gap-3 px-3 py-3 sm:px-6 lg:px-8">
         <Link
           href="/"
@@ -256,8 +252,17 @@ export default function Navbar() {
           }}
           className="flex min-w-0 items-center gap-2"
         >
-          <span className="text-3xl sm:text-4xl">🛒</span>
-
+          
+<div className="flex p-3 shrink-0 items-center justify-center rounded-xl bg-green-700  shadow-sm ">
+  <Image
+    src="/logo-icon.png"
+    alt="বাজার দর লোগো"
+    width={20}
+    height={20}
+    priority
+    className="h-full w-full object-contain"
+  />
+</div>
           <span className="min-w-0">
             <span className="block text-xl font-extrabold tracking-tight text-emerald-800 sm:text-2xl">
               বাজার দর
@@ -269,7 +274,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop account section */}
+        
         <div className="hidden items-center gap-2 sm:flex">
           {sessionLoading ? (
             <div
@@ -361,7 +366,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile menu button */}
+       
         <button
           type="button"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -376,7 +381,7 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Desktop category navigation */}
+  
       <nav className="hidden border-t border-gray-100 md:block">
         <div className="mx-auto flex max-w-6xl items-center justify-center gap-2 overflow-x-auto px-4 sm:gap-5 lg:gap-8">
           {categoryLinks.map((category) => {
@@ -401,7 +406,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile category menu */}
+   
       {menuOpen && (
         <nav className="border-t border-gray-100 bg-white p-3 md:hidden">
           <div className="grid grid-cols-2 gap-2">
@@ -426,7 +431,7 @@ export default function Navbar() {
             })}
           </div>
 
-          {/* Mobile account section */}
+          
           <div className="mt-3 border-t border-gray-100 pt-3">
             {sessionLoading ? (
               <div
@@ -525,7 +530,7 @@ export default function Navbar() {
         </nav>
       )}
 
-      {/* Scrolling product price ticker */}
+      
       <PriceTicker products={products} loading={loading} />
     </header>
   );
